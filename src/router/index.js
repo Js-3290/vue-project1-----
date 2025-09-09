@@ -14,6 +14,7 @@ import CreateView from '@/views/create/index.vue'
 import RegisterView from '@/views/register/index.vue'
 import ActTypeView from '@/views/actType/index.vue'
 import UserInfoView from '@/views/UserInfo/index.vue'
+import ApprovalsView from '@/views/approvals/index.vue'
 
 
 const router = createRouter({
@@ -43,7 +44,8 @@ const router = createRouter({
         { path: 'user', name: 'user', component: UserView },
         { path: 'userReport', name: 'userReport', component: UserReportView },
         { path: 'actReport', name: 'actReport', component: ActReportView },
-        { path: 'actType', name: 'actType', component: ActTypeView }
+        { path: 'actType', name: 'actType', component: ActTypeView },
+        { path: 'approvals', name: 'approvals', component: ApprovalsView }
       ]
     },
     { path: '/login', name: 'login', component: LoginView }

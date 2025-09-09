@@ -89,6 +89,11 @@ const route = useRoute()
               </el-icon> 活动类型管理
             </el-menu-item>
 
+            <el-menu-item index="/approvals">
+              <el-icon>
+                <Promotion />
+              </el-icon> 活动审批
+            </el-menu-item>
 
 
 

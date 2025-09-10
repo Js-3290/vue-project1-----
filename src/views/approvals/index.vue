@@ -25,8 +25,12 @@
 
       <el-table :data="approvalList" v-loading="loading" style="width: 100%">
         <el-table-column prop="id" label="ID" width="80"></el-table-column>
-        <el-table-column prop="activityName" label="活动名称"></el-table-column>
-        <el-table-column prop="approverName" label="申请人"></el-table-column>
+        <el-table-column prop="activityName" label="活动名称" ></el-table-column>
+        <el-table-column label="申请人" >
+          <template #default="scope">
+            {{ scope.row.creatorName || scope.row.approverName }}
+          </template>
+        </el-table-column>
         <el-table-column prop="createTime" label="申请时间" width="180">
           <template #default="scope">
             {{ scope.row.createTime ? formatDateTime(scope.row.createTime) : '' }}
@@ -39,15 +43,16 @@
             <el-tag v-else-if="scope.row.approvalStatus === 2" type="danger">未通过</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="approverName" label="审批人"></el-table-column>
+        <el-table-column prop="approverName" label="审批人" ></el-table-column>
         <el-table-column prop="approvalTime" label="审批时间" width="180">
           <template #default="scope">
             {{ scope.row.approvalTime ? formatDateTime(scope.row.approvalTime) : '' }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="250" fixed="right">
           <template #default="scope">
-            <el-button size="small" @click="viewDetail(scope.row)">查看详情</el-button>
+            <el-button size="small" @click="viewApprovalDetail(scope.row)">审批详情</el-button>
+            <el-button size="small" @click="viewActivityDetail(scope.row)">活动详情</el-button>
             <el-button 
               v-if="scope.row.approvalStatus === 0" 
               size="small" 
@@ -71,6 +76,48 @@
         style="margin-top: 20px; text-align: right;"
       />
     </el-card>
+
+    <!-- 审批详情对话框 -->
+    <el-dialog title="审批详情" v-model="approvalDetailDialogVisible" width="600px">
+      <el-descriptions :column="1" border>
+        <el-descriptions-item label="活动名称">{{ detailData.activityName }}</el-descriptions-item>
+        <el-descriptions-item label="申请人">{{ activityDetail.creatorName }}</el-descriptions-item>
+        <el-descriptions-item label="申请时间">{{ detailData.createTime ? formatDateTime(detailData.createTime) : '' }}</el-descriptions-item>
+        <el-descriptions-item label="审批状态">
+          <el-tag v-if="detailData.approvalStatus === 0" type="warning">待审批</el-tag>
+          <el-tag v-else-if="detailData.approvalStatus === 1" type="success">已通过</el-tag>
+          <el-tag v-else-if="detailData.approvalStatus === 2" type="danger">未通过</el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="审批人">{{ detailData.approverName }}</el-descriptions-item>
+        <el-descriptions-item label="审批时间">{{ detailData.approvalTime ? formatDateTime(detailData.approvalTime) : '' }}</el-descriptions-item>
+        <el-descriptions-item label="审批意见">{{ detailData.approvalComment }}</el-descriptions-item>
+      </el-descriptions>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="approvalDetailDialogVisible = false">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 活动详情对话框 -->
+    <el-dialog title="活动详情" v-model="activityDetailDialogVisible" width="600px">
+      <el-descriptions :column="1" border>
+        <el-descriptions-item label="活动名称">{{ activityDetail.name }}</el-descriptions-item>
+        <el-descriptions-item label="活动类型">{{ activityDetail.typeName }}</el-descriptions-item>
+        <el-descriptions-item label="活动地点">{{ activityDetail.location }}</el-descriptions-item>
+        <el-descriptions-item label="开始时间">{{ activityDetail.startTime ? formatDateTime(activityDetail.startTime) : '' }}</el-descriptions-item>
+        <el-descriptions-item label="结束时间">{{ activityDetail.endTime ? formatDateTime(activityDetail.endTime) : '' }}</el-descriptions-item>
+        <el-descriptions-item label="最大人数">{{ activityDetail.maxPeople }}</el-descriptions-item>
+        <el-descriptions-item label="当前人数">{{ activityDetail.currentPeople }}</el-descriptions-item>
+        <el-descriptions-item label="活动描述">{{ activityDetail.description }}</el-descriptions-item>
+        <el-descriptions-item label="创建人">{{ activityDetail.creatorName }}</el-descriptions-item>
+      </el-descriptions>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="activityDetailDialogVisible = false">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
 
     <!-- 审批对话框 -->
     <el-dialog title="审批活动" v-model="approveDialogVisible" width="500px">
@@ -103,28 +150,6 @@
         </span>
       </template>
     </el-dialog>
-
-    <!-- 活动详情对话框 -->
-    <el-dialog title="活动详情" v-model="detailDialogVisible" width="600px">
-      <el-descriptions :column="1" border>
-        <el-descriptions-item label="活动名称">{{ detailData.activityName }}</el-descriptions-item>
-        <el-descriptions-item label="申请人">{{ detailData.approverName }}</el-descriptions-item>
-        <el-descriptions-item label="申请时间">{{ detailData.createTime ? formatDateTime(detailData.createTime) : '' }}</el-descriptions-item>
-        <el-descriptions-item label="审批状态">
-          <el-tag v-if="detailData.approvalStatus === 0" type="warning">待审批</el-tag>
-          <el-tag v-else-if="detailData.approvalStatus === 1" type="success">已通过</el-tag>
-          <el-tag v-else-if="detailData.approvalStatus === 2" type="danger">未通过</el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="审批人">{{ detailData.approverName }}</el-descriptions-item>
-        <el-descriptions-item label="审批时间">{{ detailData.approvalTime ? formatDateTime(detailData.approvalTime) : '' }}</el-descriptions-item>
-        <el-descriptions-item label="审批意见">{{ detailData.approvalComment }}</el-descriptions-item>
-      </el-descriptions>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="detailDialogVisible = false">关闭</el-button>
-        </span>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -137,6 +162,7 @@ import {
   approveActivity, 
   getApprovalByActivityId 
 } from '@/api/approval'
+import { queryInfoApi } from '@/api/act'
 
 // 时间格式化函数
 const formatDateTime = (dateTimeString) => {
@@ -162,7 +188,8 @@ const activeTab = ref('pending')
 const loading = ref(false)
 const approvalList = ref([])
 const approveDialogVisible = ref(false)
-const detailDialogVisible = ref(false)
+const approvalDetailDialogVisible = ref(false)
+const activityDetailDialogVisible = ref(false)
 
 const filterForm = reactive({
   approvalStatus: null
@@ -183,6 +210,9 @@ const approveFormRef = ref(null)
 const currentApproval = reactive({})
 const detailData = reactive({})
 
+// 活动详情数据
+const activityDetail = ref({})
+
 // 获取审批列表
 const fetchApprovals = async () => {
   loading.value = true
@@ -198,7 +228,21 @@ const fetchApprovals = async () => {
       )
     }
     
-    approvalList.value = response.data.rows
+    // 为每个审批记录获取活动详情，以获取创建人信息
+    const approvalListWithCreator = await Promise.all(response.data.rows.map(async (approval) => {
+      try {
+        const activityResponse = await queryInfoApi(approval.activityId)
+        return {
+          ...approval,
+          creatorName: activityResponse.data.creatorName
+        }
+      } catch (error) {
+        // 如果获取活动详情失败，返回原始审批数据
+        return approval
+      }
+    }))
+    
+    approvalList.value = approvalListWithCreator
     pagination.total = response.data.total
   } catch (error) {
     ElMessage.error('获取审批列表失败')
@@ -268,14 +312,32 @@ const submitApproval = async () => {
   }
 }
 
-// 查看详情
-const viewDetail = async (row) => {
+// 查看审批详情
+const viewApprovalDetail = async (row) => {
   try {
+    // 获取审批详情
     const response = await getApprovalByActivityId(row.activityId)
     Object.assign(detailData, response.data)
-    detailDialogVisible.value = true
+    
+    // 获取活动详情以获取正确的创建人信息
+    const activityResponse = await queryInfoApi(row.activityId)
+    activityDetail.value = activityResponse.data
+    
+    approvalDetailDialogVisible.value = true
   } catch (error) {
-    ElMessage.error('获取详情失败')
+    ElMessage.error('获取审批详情失败')
+  }
+}
+
+// 查看活动详情
+const viewActivityDetail = async (row) => {
+  try {
+    // 获取活动详情
+    const activityResponse = await queryInfoApi(row.activityId)
+    activityDetail.value = activityResponse.data
+    activityDetailDialogVisible.value = true
+  } catch (error) {
+    ElMessage.error('获取活动详情失败')
   }
 }
 

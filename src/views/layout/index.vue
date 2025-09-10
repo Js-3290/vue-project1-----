@@ -90,9 +90,7 @@ const route = useRoute()
             </el-menu-item>
 
             <el-menu-item index="/approvals">
-              <el-icon>
-                <Promotion />
-              </el-icon> 活动审批
+              <el-icon><Checked /></el-icon> 活动审批
             </el-menu-item>
 
 

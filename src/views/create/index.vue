@@ -2,6 +2,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { queryPageApi, queryAllTypeApi, addApi, queryInfoApi, updateApi,deleteApi ,queryByCreatorIdApi} from '@/api/act'
+import { getApprovalByActivityId } from '@/api/approval'
 
 //元数据
 const activityType = ref([])
@@ -53,7 +54,20 @@ const queryAllType = async () => {
 const search = async () => {
   const result = await queryByCreatorIdApi(loginId.value)
   if (result.code) {
-    actList.value = result.data
+    // 为每个活动获取审批状态
+    const activityListWithApprovalStatus = await Promise.all(result.data.map(async (activity) => {
+      try {
+        const approvalResponse = await getApprovalByActivityId(activity.id)
+        return {
+          ...activity,
+          approvalStatus: approvalResponse.data.approvalStatus
+        }
+      } catch (error) {
+        // 如果获取审批信息失败，返回原始活动数据
+        return activity
+      }
+    }))
+    actList.value = activityListWithApprovalStatus
   }
 }
 
@@ -263,6 +277,14 @@ const deleteByIds = async () => {
           <span v-if="scope.row.status == 1">未开始</span>
           <span v-if="scope.row.status == 2">进行中</span>
           <span v-if="scope.row.status == 3">已结束</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="approvalStatus" label="审批状态" width="150" align="center">
+        <template #default="scope">
+          <el-tag v-if="scope.row.approvalStatus === 0" type="warning">待审批</el-tag>
+          <el-tag v-else-if="scope.row.approvalStatus === 1" type="success">已通过</el-tag>
+          <el-tag v-else-if="scope.row.approvalStatus === 2" type="danger">未通过</el-tag>
+          <span v-else>无审批</span>
         </template>
       </el-table-column>
       <el-table-column prop="creatorName" label="发起人" width="150" align="center" />
